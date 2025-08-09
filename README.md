@@ -29,11 +29,7 @@ Install requirements:
 pip install -r requirements.txt 
 ```
 
-Create your .env file - copy .env.example to .env and fill in your bot token:
-
-```bash
-BOT_TOKEN=your_bot_token_here
-```
+Create your .env file - copy .env.example to .env and fill in your data (tg_bot api and data for your PostgreSql server connection)
 
 Run it locally :)
 
