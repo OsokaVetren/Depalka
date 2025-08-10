@@ -34,6 +34,17 @@ def new_user(user_id, username, password):
     except IntegrityError:
         return False
 
+def eballs_balance(username):
+    query = text("""
+                 SELECT eballs
+                 FROM users
+                 WHERE username = :username
+                 LIMIT 1
+                 """)
+    with engine.begin() as conn:
+        result = conn.execute(query, {"username": username}).first()
+    return result[0]
+
 def eballs_change(username, delta):
     query = text("""
                  UPDATE users
