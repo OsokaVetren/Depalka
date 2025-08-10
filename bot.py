@@ -69,18 +69,21 @@ async def Password_getter(message: types.Message, state: FSMContext):
     password = await get_data(state, "password")
     type = await get_data(state, "type")
     await message.answer("Ваш логин и пароль: " + username + " " + password)
+    user_id = message.from_user.id
     if type == "login":
         if is_user_valid(username, password):
             await message.answer("Вы успешно вошли! Вновь приветствуем Вас в депалке!")
             await state.set_state(FSM.Depalka)
-        await message.answer("Ебать ты лох, данные не верны)")
-        await state.set_state(FSM.RegLogState)
+        else:
+            await message.answer("Ебать ты лох, данные не верны)")
+            await state.set_state(FSM.RegLogState)
     if type == "register":
-        if new_user(username, password):
+        if new_user(user_id, username, password):
             await message.answer("Вы успешно зарегестрировались! Добро пожаловать в Депалку!")
             await state.set_state(FSM.Depalka)
-        await message.answer("Проблемы какие-то с ботом. Поплачьте")
-        await state.set_state(FSM.RegLogState)
+        else:
+            await message.answer("Ебать ты лох, никнейм занят)")
+            await state.set_state(FSM.RegLogState)
 
 async def get_data(state: FSMContext, key: str):
     data = await state.get_data()

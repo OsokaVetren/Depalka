@@ -22,14 +22,14 @@ def is_user_valid(username, password):
         result = conn.execute(query, {"username": username, "password": password}).first()
     return result is not None
 
-def new_user(username, password):
+def new_user(user_id, username, password):
     query = text("""
-                 INSERT INTO users (username, password)
-                 VALUES (:username, crypt(:password, gen_salt('bf')))
+                 INSERT INTO users (user_id, username, password)
+                 VALUES (:user_id, :username, crypt(:password, gen_salt('bf')))
                  """)
     try:
         with engine.begin() as conn:
-            conn.execute(query, {"username": username, "password": password})
+            conn.execute(query, {"user_id": user_id, "username": username, "password": password})
         return True
     except IntegrityError:
         return False
