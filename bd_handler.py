@@ -3,8 +3,9 @@ from sqlalchemy.exc import IntegrityError
 from Config.config_reader import config
 
 conn_str = (
+    # временно для отладки — не оставляй в продеssword ->", config.password.get_secret_value())
     f"postgresql+psycopg2://"
-    f"{config.user}:{config.password.get_secret_value()}@"
+    f"{config.db_user}:{config.password.get_secret_value()}@"
     f"{config.server_ip}/{config.database_name}"
 )
 engine = create_engine(conn_str)

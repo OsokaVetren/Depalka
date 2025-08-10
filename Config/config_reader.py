@@ -8,7 +8,7 @@ class Settings(BaseSettings):
     bot_token: SecretStr
     server_ip: str
     database_name: str
-    user: str
+    db_user: str
     password: SecretStr
     # Начиная со второй версии pydantic, настройки класса настроек задаются
     # через model_config
