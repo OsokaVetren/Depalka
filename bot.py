@@ -226,7 +226,7 @@ async def dig_cell(callback: types.CallbackQuery, state: FSMContext):
     profit = data["profit"]
     bet = data["bet"]
 
-    if field[r][c] == 1:
+    if field[r][c] == 2:
         await state.update_data(profit=0)
         await callback.message.edit_text(
             f"💥 Бум! Ты просрал {bet} е-баллов!"
