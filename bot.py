@@ -281,6 +281,16 @@ async def cashout(callback: types.CallbackQuery, state: FSMContext):
     )
     await state.set_state(FSM.Depalka)
 
+@dp.message(Command('pravda'))
+async def upload_photo(message: types.Message):
+    # Сюда будем помещать file_id отправленных файлов, чтобы потом ими воспользоваться
+    file_ids = []
+    image_from_url = URLInputFile("https://i.pinimg.com/736x/a2/73/48/a27348497a3fda42f972f2ab11571f64.jpg")
+    result = await message.answer_photo(
+        image_from_url,
+        caption="что вас ждёт"
+    )
+
 # Запуск процесса поллинга новых апдейтов
 async def main():
     await dp.start_polling(bot)
