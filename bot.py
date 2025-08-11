@@ -204,7 +204,7 @@ async def set_bet(message: types.Message, state: FSMContext):
         await message.answer("Введи число >= 5, мамкин тестер")
         return
     
-    eballs_change(data["username"], +bet)
+    eballs_change(data["username"], -bet)
     field = generate_field()
     await state.update_data(
         bet=bet,
@@ -255,7 +255,7 @@ async def dig_cell(callback: types.CallbackQuery, state: FSMContext):
     profit = data["profit"]
     bet = data["bet"]
 
-    if field[r][c] == 2:
+    if field[r][c] == 1:
         await state.update_data(profit=0)
         await callback.message.edit_text(
             f"💥 Бум! Ты просрал {bet} е-баллов!"
