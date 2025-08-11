@@ -30,8 +30,6 @@ async def cmd_start(message: types.Message, state: FSMContext):
     await message.answer("Привет, брательник! На всякий случай - ты вошёл в додепалку, тг-бот для розыгрыша е-баллов. Есть два стула", reply_markup=get_start_keyboard())
     await state.set_state(FSM.RegLogState)
 
-#need to implement login/logout interface
-
 def get_start_keyboard():
     keyboard = InlineKeyboardMarkup(inline_keyboard=[
         [
@@ -49,20 +47,20 @@ async def process_register(callback: types.CallbackQuery, state: FSMContext):
     await state.set_state(FSM.Login)
 
 @dp.callback_query(FSM.RegLogState, F.data == "login")
-async def process_register(callback: types.CallbackQuery, state: FSMContext):
+async def process_login(callback: types.CallbackQuery, state: FSMContext):
     await callback.answer()
     await state.update_data(type = "login")
     await callback.message.answer("Введи логин:")
     await state.set_state(FSM.Login)
 
 @dp.message(FSM.Login)
-async def Login_getter(message: types.Message, state: FSMContext):
+async def login_getter(message: types.Message, state: FSMContext):
     await state.update_data(username = message.text)
     await message.answer("Введи пароль:")
     await state.set_state(FSM.Password)
 
 @dp.message(FSM.Password)
-async def Password_getter(message: types.Message, state: FSMContext):
+async def password_getter(message: types.Message, state: FSMContext):
     await state.update_data(password = message.text)
     username = await get_data(state, "username")
     password = await get_data(state, "password")
@@ -88,6 +86,7 @@ async def get_data(state: FSMContext, key: str):
     data = await state.get_data()
     return str(data.get(key))
 
+# Хэндлер на команду /info
 @dp.message(Command("info"), FSM.Depalka)
 async def show_info(message: types.Message, state: FSMContext):
     data = await state.get_data()
