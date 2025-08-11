@@ -5,7 +5,7 @@ import random
 from aiogram import F
 from aiogram import Bot, Dispatcher, types
 from aiogram.filters.command import Command
-from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton
+from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton, FSInputFile
 from aiogram.fsm.context import FSMContext
 from aiogram.fsm.state import StatesGroup, State
 from aiogram.fsm.storage.memory import MemoryStorage
@@ -285,9 +285,9 @@ async def cashout(callback: types.CallbackQuery, state: FSMContext):
 async def upload_photo(message: types.Message):
     # Сюда будем помещать file_id отправленных файлов, чтобы потом ими воспользоваться
     file_ids = []
-    with open("pravda.jpg", "r") as pravda:
-        await message.answer_photo(
-            pravda,
+    photo = FSInputFile("pravda.jpg")
+    await message.answer_photo(
+            photo,
             caption="что вас ждёт"
     )
 
