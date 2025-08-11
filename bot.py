@@ -175,7 +175,7 @@ async def set_bet(message: types.Message, state: FSMContext):
         await message.answer("Введи число >= 5, мамкин тестер")
         return
     
-    eballs_change(data["username"], -bet)
+    eballs_change(data["username"], +bet)
     field = generate_field()
     await state.update_data(
         bet=bet,
