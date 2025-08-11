@@ -13,7 +13,7 @@ from Config.config_reader import config
 from bd_handler import is_user_valid, new_user, eballs_balance, eballs_change
 
 
-# кто откоммитить тот гей
+# кто откатит коммит тот гей
 
 #⠀⠀⠀⠀⠀⠀⠀⢀⣤⣴⣶⣶⣶⣤⣀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
 #⠀⠀⠀⠀⠀⢀⣴⣿⠟⠛⠛⠛⠛⠛⢿⣇⠀⠀⠀⠀⠀⠀⠀⠀⠀
