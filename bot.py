@@ -147,9 +147,11 @@ async def get_help(callback: types.CallbackQuery):
     await callback.message.edit_text("В депалке есть множество способов поднять е-баллов и стать самым крутым в садике😎\n\n"
                                   "🪙 Монетка - выбираешь сторону и бросаешь монетку. "
                                   "Если выбранная сторона окажется верной, ставочка приумножится x2, а если неверной, то гуляй вася жуй опилки\n"
-                                  "💰 Рулетка - нуээ там крч колесо крутится и ставить можно по-разному, сами разберётесь крч\n"
+                                  "💰 Рулетка - там крч колесо крутится и ставить можно по-разному, сами разберётесь крч\n"
                                   "💣 Сапёр - есть сетка из плиток, в каждой из них либо приз, либо мина. После каждой плитки можно либо вывести приз, либо продолжить гэмблить. "
-                                  "Наступил на мину - поздравляю, ты лох)\n\n"
+                                  "Наступил на мину - поздравляю, ты лох)\n"
+                                  "🃏 Блекджек - тихий и стандартный, цель - набрать больше очков, чем дилер, но не более 21. "
+                                  "Присутствует смелая возможность удвоить ставочку на первом ходу, но и шанс оподливиться станет выше\n\n"
                                   "P.S.: напиши /pravda, чтобы узнать секрет🤫",
                                   reply_markup=get_help_keyboard())
     
@@ -589,6 +591,68 @@ async def dealer_turn(message, state, doubled=False):
     
     await message.edit_text(result_text)
     await state.set_state(FSM.Depalka)
+
+
+# -------------------- Рулетка --------------------
+@dp.callback_query(FSM.Depalka, F.data == "roulette")
+async def start_roulette_game(callback: types.CallbackQuery, state: FSMContext):
+    await state.set_state(RouletteFSM.Bet)
+    await callback.message.edit_text("💰 Введи сумму ставки (>= 5):")
+
+class RouletteFSM(StatesGroup):
+    Bet = State()
+    Playing = State()
+
+@dp.message(RouletteFSM.Bet)
+async def set_roulette_bet(message: types.Message, state: FSMContext):
+    data = await state.get_data()
+    try:
+        bet = int(message.text)
+        if bet < 5:
+            raise ValueError
+        if eballs_balance(data["username"]) < bet:
+            await message.answer("Ебать ты лох, деняк не хватает)")
+            return
+    except ValueError:
+        await message.answer("Введи число >= 5, мамкин тестер")
+        return
+
+    await state.update_data(bet=bet)
+    await state.set_state(RouletteFSM.Playing)
+    await message.answer(
+        "🎰 Выбери тип ставки:\n\n"
+        "🔴 Красное (x2) - числа: 1,3,5,7,9,12,14,16,18,19,21,23,25,27,30,32,34,36\n"
+        "⚫ Чёрное (x2) - числа: 2,4,6,8,10,11,13,15,17,20,22,24,26,28,29,31,33,35\n"
+        "🟢 Зеро (x36) - число 0\n"
+        "Чётное/Нечётное (x2)\n"
+        "Высокие/Низкие (x2) - низкие: 1-18, высокие: 19-36\n"
+        "🎯 Конкретное число (x36) от 1 до 36",
+        reply_markup=get_roulette_keyboard()
+    )
+
+def get_roulette_keyboard():
+    keyboard = InlineKeyboardMarkup(inline_keyboard=[
+        [
+            InlineKeyboardButton(text="🔴 Красное", callback_data="roulette_red"),
+            InlineKeyboardButton(text="⚫ Чёрное", callback_data="roulette_black"),
+            InlineKeyboardButton(text="🟢 Зеро", callback_data="roulette_zero")
+        ],
+        [
+            InlineKeyboardButton(text="Чётное", callback_data="roulette_even"),
+            InlineKeyboardButton(text="Нечётное", callback_data="roulette_odd")
+        ],
+        [
+            InlineKeyboardButton(text="Низкие (1-18)", callback_data="roulette_low"),
+            InlineKeyboardButton(text="Высокие (19-36)", callback_data="roulette_high")
+        ],
+        [
+            InlineKeyboardButton(text="🎯 Конкретное число", callback_data="roulette_number")
+        ],
+        [
+            InlineKeyboardButton(text="В меню", callback_data="info")
+        ]
+    ])
+    return keyboard
 
 
 # Хэндлер на команду /pravda
