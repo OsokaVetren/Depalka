@@ -48,6 +48,7 @@ bot = Bot(token=config.bot_token.get_secret_value())
 # Диспетчер
 dp = Dispatcher()
 
+
 class FSM(StatesGroup):
     RegLogState = State()
     Login = State()
@@ -116,6 +117,7 @@ async def get_data(state: FSMContext, key: str):
     data = await state.get_data()
     return str(data.get(key))
 
+
 # Хэндлер на команду /info
 @dp.message(Command("info"), FSM.Depalka)
 async def show_info(message: types.Message, state: FSMContext):
@@ -147,7 +149,8 @@ async def get_help(callback: types.CallbackQuery):
                                   "Если выбранная сторона окажется верной, ставочка приумножится x2, а если неверной, то гуляй вася жуй опилки\n"
                                   "💰 Рулетка - нуээ там крч колесо крутится и ставить можно по-разному, сами разберётесь крч\n"
                                   "💣 Сапёр - есть сетка из плиток, в каждой из них либо приз, либо мина. После каждой плитки можно либо вывести приз, либо продолжить гэмблить. "
-                                  "Наступил на мину - поздравляю, ты лох)",
+                                  "Наступил на мину - поздравляю, ты лох)\n\n"
+                                  "P.S.: напиши /pravda, чтобы узнать секрет🤫",
                                   reply_markup=get_help_keyboard())
     
 def get_help_keyboard():
@@ -158,9 +161,10 @@ def get_help_keyboard():
     ])
     return keyboard
 
-@dp.callback_query(FSM.Depalka, F.data == "info")
+@dp.callback_query(F.data == "info")
 async def back_to_info(callback: types.CallbackQuery, state: FSMContext):
     data = await state.get_data()
+    await state.set_state(FSM.Depalka)
     await callback.message.edit_text(f"Никнейм: {data['username']}\n"
                                   f"Е-баллы: {eballs_balance(data['username'])}",
                                   reply_markup=get_info_keyboard())
@@ -172,7 +176,7 @@ async def choose_game(callback: types.CallbackQuery):
 def get_games_keyboard():
     keyboard = InlineKeyboardMarkup(inline_keyboard=[
         [
-            InlineKeyboardButton(text="Монетка", callback_data="money_flip"),
+            InlineKeyboardButton(text="Монетка", callback_data="coinflip"),
             InlineKeyboardButton(text="Рулетка", callback_data="roulette"),
         ], [
             InlineKeyboardButton(text="Сапёр", callback_data="dig"),
@@ -181,6 +185,8 @@ def get_games_keyboard():
     ])
     return keyboard
 
+
+# -------------------- Сапёр --------------------
 @dp.callback_query(FSM.Depalka, F.data == "dig")
 async def start_dig_game(callback: types.CallbackQuery, state: FSMContext):
     await state.set_state(DigFSM.Bet)
@@ -191,7 +197,7 @@ class DigFSM(StatesGroup):
     Playing = State()
 
 @dp.message(DigFSM.Bet)
-async def set_bet(message: types.Message, state: FSMContext):
+async def set_dig_bet(message: types.Message, state: FSMContext):
     data = await state.get_data()
     try:
         bet = int(message.text)
@@ -281,10 +287,79 @@ async def cashout(callback: types.CallbackQuery, state: FSMContext):
     )
     await state.set_state(FSM.Depalka)
 
+
+# -------------------- Монетка --------------------
+@dp.callback_query(FSM.Depalka, F.data == "coinflip")
+async def start_coin_game(callback: types.CallbackQuery, state: FSMContext):
+    await state.set_state(CoinFSM.Bet)
+    await callback.message.edit_text("💰 Введи сумму ставки (>= 5):")
+
+class CoinFSM(StatesGroup):
+    Bet = State()
+    Playing = State()
+
+@dp.message(CoinFSM.Bet)
+async def set_coin_bet(message: types.Message, state: FSMContext):
+    data = await state.get_data()
+    try:
+        bet = int(message.text)
+        if bet < 5:
+            raise ValueError
+        if eballs_balance(data["username"]) < bet:
+            await message.answer("Ебать ты лох, деняк не хватает)")
+            return
+    except ValueError:
+        await message.answer("Введи число >= 5, мамкин тестер")
+        return
+
+    await state.update_data(bet=bet)
+    await state.set_state(CoinFSM.Playing)
+    keyboard = InlineKeyboardMarkup(inline_keyboard=[
+        [
+            InlineKeyboardButton(text="Орел", callback_data="coin_heads"),
+            InlineKeyboardButton(text="Решка", callback_data="coin_tails")
+        ],
+        [InlineKeyboardButton(text="В меню", callback_data="info")]
+    ])
+    await message.answer("Выбери сторону:", reply_markup=keyboard)
+    
+
+@dp.callback_query(CoinFSM.Playing, F.data.startswith("coin_"))
+async def coin_result(callback: types.CallbackQuery, state: FSMContext):
+    data = await state.get_data()
+    username = data["username"]
+    bet = data["bet"]
+    user_choice = callback.data.split("_")[1]
+
+    eballs_change(username, -bet)  # списываем ставку
+    flip_result = random.choices(["heads", "tails", "edge"], weights=[49, 49, 2])[0]
+
+    if flip_result == user_choice:
+        prize = bet * 2
+        eballs_change(username, prize)
+        await callback.message.edit_text(
+            f"🪙 {'Выпал Орел' if flip_result == 'heads' else 'Выпала Решка'}!\n"
+            f"Ты выиграл {prize} е-баллов 🎉"
+        )
+    elif flip_result == "edge":
+        bonus = bet//2
+        eballs_change(username, bonus)
+        await callback.message.edit_text(
+            f"🪙 Монетка встала на ребро! 🤯\n"
+            f"Ставочка не сыграла, но кэшбек {bonus} е-баллов!"
+        )
+    else:
+        await callback.message.edit_text(
+            f"🪙 {'Выпал Орел' if flip_result == 'heads' else 'Выпала Решка'}!\n"
+            f"Ты просрал {bet} е-баллов 💀"
+        )
+
+    await state.set_state(FSM.Depalka)
+
+
+# Хэндлер на команду /pravda
 @dp.message(Command('pravda'), FSM.Depalka)
 async def upload_photo(message: types.Message):
-    # Сюда будем помещать file_id отправленных файлов, чтобы потом ими воспользоваться
-    file_ids = []
     photo = FSInputFile("pravda.jpg")
     await message.answer_photo(
             photo,
