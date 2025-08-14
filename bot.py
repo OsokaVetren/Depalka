@@ -10,7 +10,7 @@ from aiogram.fsm.context import FSMContext
 from aiogram.fsm.state import StatesGroup, State
 from aiogram.fsm.storage.memory import MemoryStorage
 from Config.config_reader import config
-from bd_handler import is_user_valid, new_user, eballs_balance, eballs_change
+from bd_handler import is_user_valid, new_user, eballs_balance, eballs_change, log_game, get_user_stats
 
 
 # кто откатит коммит тот гей
@@ -264,9 +264,15 @@ async def dig_cell(callback: types.CallbackQuery, state: FSMContext):
     opened = data["opened"]
     profit = data["profit"]
     bet = data["bet"]
+    username = data["username"]
 
     if field[r][c] == 1:
         await state.update_data(profit=0)
+        details = {
+            "opened_cells": len(opened),
+            "hit_mine_at": f"{r},{c}"
+        }
+        log_game(username, "dig", bet, "lose", 0, details)
         await callback.message.edit_text(
             f"💥 Бум! Ты просрал {bet} е-баллов!"
         )
@@ -285,7 +291,15 @@ async def cashout(callback: types.CallbackQuery, state: FSMContext):
     data = await state.get_data()
     profit = data["profit"]
     bet = data["bet"]
+    username = data["username"]
+    opened = data["opened"]
+
     eballs_change(data["username"], profit)
+    details = {
+        "opened_cells": len(opened),
+        "cashout_profit": profit
+    }
+    log_game(username, "dig", bet, "win", profit, details)
     await callback.message.edit_text(
         f"Ты забрал {profit} е-баллов со ставки {bet}"
     )
@@ -338,9 +352,15 @@ async def coin_result(callback: types.CallbackQuery, state: FSMContext):
     eballs_change(username, -bet)  # списываем ставку
     flip_result = random.choices(["heads", "tails", "edge"], weights=[49, 49, 2])[0]
 
+    details = {
+        "user_choice": user_choice,
+        "flip_result": flip_result
+    }
+
     if flip_result == user_choice:
         prize = bet * 2
         eballs_change(username, prize)
+        log_game(username, "coinflip", bet, "win", prize, details)
         await callback.message.edit_text(
             f"🪙 {'Выпал Орел' if flip_result == 'heads' else 'Выпала Решка'}!\n"
             f"Ты выиграл {prize} е-баллов 🎉"
@@ -348,11 +368,13 @@ async def coin_result(callback: types.CallbackQuery, state: FSMContext):
     elif flip_result == "edge":
         bonus = bet//2
         eballs_change(username, bonus)
+        log_game(username, "coinflip", bet, "draw", bonus, details)
         await callback.message.edit_text(
             f"🪙 Монетка встала на ребро! 🤯\n"
             f"Ставочка не сыграла, но кэшбек {bonus} е-баллов!"
         )
     else:
+        log_game(username, "coinflip", bet, "lose", 0, details)
         await callback.message.edit_text(
             f"🪙 {'Выпал Орел' if flip_result == 'heads' else 'Выпала Решка'}!\n"
             f"Ты просрал {bet} е-баллов 💀"
@@ -402,8 +424,17 @@ async def set_blackjack_bet(message: types.Message, state: FSMContext):
     player_score = calculate_score(player_hand)
     dealer_score = calculate_score(dealer_hand)
     
+    details = {
+        "player_hand": player_hand,
+        "dealer_hand": dealer_hand,
+        "player_score": player_score,
+        "dealer_score": dealer_score,
+        "doubled": False
+    }
+
     if player_score == 21 and dealer_score == 21:
         eballs_change(data["username"], bet)
+        log_game(data["username"], "blackjack", bet, "draw", bet, details)
         await message.answer(
             f"🃏 BLACKJACK!\n\n"
             f"Твои карты: {format_hand(player_hand)} = {player_score}\n"
@@ -414,6 +445,7 @@ async def set_blackjack_bet(message: types.Message, state: FSMContext):
     elif player_score == 21:
         prize = int(bet * 2.5)
         eballs_change(data["username"], prize)
+        log_game(data["username"], "blackjack", bet, "win", prize, details)
         await message.answer(
             f"🃏 BLACKJACK!\n\n"
             f"Твои карты: {format_hand(player_hand)} = {player_score}\n"
@@ -496,10 +528,20 @@ async def blackjack_hit(callback: types.CallbackQuery, state: FSMContext):
     
     player_hand.append(draw_card(deck))
     player_score = calculate_score(player_hand)
+    dealer_score = calculate_score(dealer_hand)
     
     await state.update_data(player_hand=player_hand, deck=deck)
     
+    details = {
+        "player_hand": player_hand,
+        "dealer_hand": dealer_hand,
+        "player_score": player_score,
+        "dealer_score": dealer_score,
+        "doubled": False
+    }
+
     if player_score > 21:
+        log_game(username, "blackjack", bet, "lose", 0, details)
         await callback.message.edit_text(
             f"Твои карты: {format_hand(player_hand)} = {player_score}\n"
             f"Карты дилера: {format_hand(dealer_hand, hide_first=True)}\n\n"
@@ -538,6 +580,7 @@ async def blackjack_double(callback: types.CallbackQuery, state: FSMContext):
     
     player_hand.append(draw_card(deck))
     player_score = calculate_score(player_hand)
+    dealer_score = calculate_score(dealer_hand)
     
     await state.update_data(
         player_hand=player_hand,
@@ -545,7 +588,16 @@ async def blackjack_double(callback: types.CallbackQuery, state: FSMContext):
         bet=bet * 2
     )
     
+    details = {
+        "player_hand": player_hand,
+        "dealer_hand": dealer_hand,
+        "player_score": player_score,
+        "dealer_score": dealer_score,
+        "doubled": True
+    }
+
     if player_score > 21:
+        log_game(username, "blackjack", bet*2, "lose", 0, details)
         await callback.message.edit_text(
             f"Твои карты: {format_hand(player_hand)} = {player_score}\n"
             f"Карты дилера: {format_hand(dealer_hand, hide_first=True)}\n\n"
@@ -575,18 +627,30 @@ async def dealer_turn(message, state, doubled=False):
         f"Карты дилера: {format_hand(dealer_hand)} = {dealer_score}\n\n"
     )
     
+    details = {
+        "player_hand": player_hand,
+        "dealer_hand": dealer_hand,
+        "player_score": player_score,
+        "dealer_score": dealer_score,
+        "doubled": doubled
+    }
+
     if dealer_score > 21:
         prize = bet * 2
         eballs_change(username, prize)
+        log_game(username, "blackjack", bet, "win", prize, details)
         result_text += f"🎉 Дилер перебрал! Ты выиграл {prize} е-баллов!"
     elif player_score > dealer_score:
         prize = bet * 2
         eballs_change(username, prize)
+        log_game(username, "blackjack", bet, "win", prize, details)
         result_text += f"🎉 Ты выиграл {prize} е-баллов!"
     elif player_score == dealer_score:
         eballs_change(username, bet)
+        log_game(username, "blackjack", bet, "draw", bet, details)
         result_text += f"🤝 Ничья! Ставка возвращена: {bet} е-баллов"
     else:
+        log_game(username, "blackjack", bet, "lose", 0, details)
         result_text += f"💀 Дилер выиграл! Ты просрал {bet} е-баллов"
     
     await message.edit_text(result_text)
