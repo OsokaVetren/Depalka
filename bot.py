@@ -152,7 +152,7 @@ async def get_help(callback: types.CallbackQuery):
                                   "Наступил на мину - поздравляю, ты лох)\n"
                                   "🃏 Блекджек - тихий и стандартный, цель - набрать больше очков, чем дилер, но не более 21. "
                                   "Присутствует смелая возможность удвоить ставочку на первом ходу, но и шанс оподливиться станет выше\n\n"
-                                  "P.S.: напиши /pravda, чтобы узнать секрет🤫",
+                                  "P.S.: напиши /stats, чтобы посмотреть статку последних 5 игр, или /pravda, чтобы узнать секрет🤫",
                                   reply_markup=get_help_keyboard())
     
 def get_help_keyboard():
@@ -717,6 +717,44 @@ def get_roulette_keyboard():
         ]
     ])
     return keyboard
+
+
+# Хэндлер на команду /stats
+@dp.message(Command("stats"), FSM.Depalka)
+async def show_stats(message: types.Message, state: FSMContext):
+    data = await state.get_data()
+    username = data["username"]
+    
+    # Получаем последние 5 игр пользователя
+    user_stats = get_user_stats(username, 5)
+    
+    if not user_stats:
+        await message.answer("Так ты же не играл еще")
+        return
+    
+    stats_text = f"📊 Твоя статистика последних игр:\n\n"
+    
+    for i, game in enumerate(user_stats, 1):
+        game_type_names = {
+            'coinflip': '🪙 Монетка',
+            'roulette': '💰 Рулетка', 
+            'blackjack': '🃏 Блекджек',
+            'dig': '💣 Сапёр'
+        }
+        
+        result_emoji = {
+            'win': '🎉',
+            'lose': '💀', 
+            'draw': '🤝'
+        }
+        
+        game_name = game_type_names.get(game['game_type'])
+        result = result_emoji.get(game['result'])
+        
+        stats_text += f"{i}. {game_name}\n"
+        stats_text += f"   Ставка: {game['bet_amount']} | Приз: {game['prize_amount']} {result}\n\n"
+    
+    await message.answer(stats_text)
 
 
 # Хэндлер на команду /pravda
