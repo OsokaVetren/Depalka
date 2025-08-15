@@ -688,8 +688,8 @@ async def set_roulette_bet(message: types.Message, state: FSMContext):
         "🔴 Красное (x2) - числа: 1,3,5,7,9,12,14,16,18,19,21,23,25,27,30,32,34,36\n"
         "⚫ Чёрное (x2) - числа: 2,4,6,8,10,11,13,15,17,20,22,24,26,28,29,31,33,35\n"
         "🟢 Зеро (x36) - число 0\n"
-        "Чётное/Нечётное (x2)\n"
-        "Высокие/Низкие (x2) - низкие: 1-18, высокие: 19-36\n"
+        "📊 Чётное/Нечётное (x2)\n"
+        "📈 Высокие/Низкие (x2) - низкие: 1-18, высокие: 19-36\n"
         "🎯 Конкретное число (x36) от 1 до 36",
         reply_markup=get_roulette_keyboard()
     )
@@ -717,6 +717,157 @@ def get_roulette_keyboard():
         ]
     ])
     return keyboard
+
+RED_NUMBERS = {1,3,5,7,9,12,14,16,18,19,21,23,25,27,30,32,34,36}
+BLACK_NUMBERS = {2,4,6,8,10,11,13,15,17,20,22,24,26,28,29,31,33,35}
+
+@dp.callback_query(RouletteFSM.Playing, F.data.startswith("roulette_"))
+async def roulette_bet_handler(callback: types.CallbackQuery, state: FSMContext):
+    bet_type = callback.data.split("_")[1]
+    
+    if bet_type == "number":
+        await callback.message.edit_text(
+            "Введи число от 1 до 36:",
+            reply_markup=InlineKeyboardMarkup(inline_keyboard=[
+                [InlineKeyboardButton(text="Назад", callback_data="roulette_back")]
+            ])
+        )
+        await state.update_data(awaiting_number=True)
+        return
+    
+    await state.update_data(bet_type=bet_type)
+    await spin_roulette(callback, state)
+
+@dp.message(RouletteFSM.Playing)
+async def number_input_handler(message: types.Message, state: FSMContext):
+    data = await state.get_data()
+    if not data.get("awaiting_number"):
+        return
+        
+    try:
+        number = int(message.text)
+        if not (1 <= number <= 36):
+            raise ValueError
+    except ValueError:
+        await message.answer("Это не от 1 до 36 ало")
+        return
+    
+    await state.update_data(bet_type="specific", chosen_number=number, awaiting_number=False)
+    await spin_roulette_message(message, state)
+
+@dp.callback_query(RouletteFSM.Playing, F.data == "roulette_back")
+async def roulette_back(callback: types.CallbackQuery, state: FSMContext):
+    await state.update_data(awaiting_number=False)
+    await callback.message.edit_text(
+        "🎰 Выбери тип ставки:\n\n"
+        "🔴 Красное (x2) - числа: 1,3,5,7,9,12,14,16,18,19,21,23,25,27,30,32,34,36\n"
+        "⚫ Чёрное (x2) - числа: 2,4,6,8,10,11,13,15,17,20,22,24,26,28,29,31,33,35\n"
+        "🟢 Зеро (x36) - число 0\n"
+        "📊 Чётное/Нечётное (x2)\n"
+        "📈 Высокие/Низкие (x2) - низкие: 1-18, высокие: 19-36\n"
+        "🎯 Конкретное число (x36) от 1 до 36",
+        reply_markup=get_roulette_keyboard()
+    )
+
+async def spin_roulette(callback: types.CallbackQuery, state: FSMContext):
+    await callback.message.edit_text("Крутим рулетку... 🎰")
+    await asyncio.sleep(2)
+    
+    winning_number = random.randint(0, 36)
+    
+    data = await state.get_data()
+    bet = data["bet"]
+    bet_type = data["bet_type"]
+    username = data["username"]
+    
+    if winning_number == 0:
+        color_emoji = "🟢"
+        color_name = "ЗЕРО"
+    elif winning_number in RED_NUMBERS:
+        color_emoji = "🔴"
+        color_name = "красное"
+    else:
+        color_emoji = "⚫"
+        color_name = "чёрное"
+    
+    win = False
+    multiplier = 0
+    
+    if bet_type == "red" and winning_number in RED_NUMBERS:
+        win = True
+        multiplier = 2
+    elif bet_type == "black" and winning_number in BLACK_NUMBERS:
+        win = True
+        multiplier = 2
+    elif bet_type == "zero" and winning_number == 0:
+        win = True
+        multiplier = 36
+    elif bet_type == "even" and winning_number > 0 and winning_number % 2 == 0:
+        win = True
+        multiplier = 2
+    elif bet_type == "odd" and winning_number % 2 == 1:
+        win = True
+        multiplier = 2
+    elif bet_type == "low" and 1 <= winning_number <= 18:
+        win = True
+        multiplier = 2
+    elif bet_type == "high" and 19 <= winning_number <= 36:
+        win = True
+        multiplier = 2
+    
+    eballs_change(username, -bet)
+    
+    result_text = f"🎰 Выпало: {color_emoji} {winning_number} ({color_name})\n\n"
+    
+    if win:
+        prize = bet * multiplier
+        eballs_change(username, prize)
+        result_text += f"🎉 Ты выиграл {prize} е-баллов! (x{multiplier})"
+    else:
+        result_text += f"💀 Ты просрал {bet} е-баллов"
+    
+    await callback.message.edit_text(result_text)
+    await state.set_state(FSM.Depalka)
+
+async def spin_roulette_message(message: types.Message, state: FSMContext):
+    await message.answer("Крутим рулетку... 🎰")
+    await asyncio.sleep(2)
+
+    winning_number = random.randint(0, 36)
+    
+    data = await state.get_data()
+    bet = data["bet"]
+    bet_type = data["bet_type"]
+    username = data["username"]
+    chosen_number = data.get("chosen_number")
+    
+    if winning_number == 0:
+        color_emoji = "🟢"
+        color_name = "ЗЕРО"
+    elif winning_number in RED_NUMBERS:
+        color_emoji = "🔴"
+        color_name = "красное"
+    else:
+        color_emoji = "⚫"
+        color_name = "чёрное"
+    
+    win = winning_number == chosen_number
+    multiplier = 36 if win else 0
+    
+    eballs_change(username, -bet)
+    
+    result_text = f"🎰 Выпало: {color_emoji} {winning_number} ({color_name})\n"
+    result_text += f"Твоя ставка была на: {chosen_number}\n\n"
+    
+    if win:
+        prize = bet * multiplier
+        eballs_change(username, prize)
+        result_text += f"🎉 ДЖЕКПОТ! Ты угадал точное число! Выиграл {prize} е-баллов! (x{multiplier})"
+    else:
+        result_text += f"💀 Ты просрал {bet} е-баллов"
+    
+    await message.answer(result_text)
+    await state.set_state(FSM.Depalka)
 
 
 # Хэндлер на команду /stats
