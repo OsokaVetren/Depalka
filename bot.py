@@ -752,7 +752,7 @@ async def number_input_handler(message: types.Message, state: FSMContext):
         await message.answer("Это не от 1 до 36 ало")
         return
     
-    await state.update_data(bet_type="specific", chosen_number=number, awaiting_number=False)
+    await state.update_data(bet_type="number", chosen_number=number, awaiting_number=False)
     await spin_roulette_message(message, state)
 
 @dp.callback_query(RouletteFSM.Playing, F.data == "roulette_back")
@@ -818,12 +818,19 @@ async def spin_roulette(callback: types.CallbackQuery, state: FSMContext):
     eballs_change(username, -bet)
     
     result_text = f"🎰 Выпало: {color_emoji} {winning_number} ({color_name})\n\n"
-    
+
+    details = {
+        "bet_type": bet_type,
+        "winning_number": winning_number
+    }
+
     if win:
         prize = bet * multiplier
         eballs_change(username, prize)
+        log_game(username, "roulette", bet, "win", prize, details)
         result_text += f"🎉 Ты выиграл {prize} е-баллов! (x{multiplier})"
     else:
+        log_game(username, "roulette", bet, "lose", 0, details)
         result_text += f"💀 Ты просрал {bet} е-баллов"
     
     await callback.message.edit_text(result_text)
@@ -859,11 +866,19 @@ async def spin_roulette_message(message: types.Message, state: FSMContext):
     result_text = f"🎰 Выпало: {color_emoji} {winning_number} ({color_name})\n"
     result_text += f"Твоя ставка была на: {chosen_number}\n\n"
     
+    details = {
+        "bet_type": "number",
+        "chosen_number": chosen_number,
+        "winning_number": winning_number
+    }
+
     if win:
         prize = bet * multiplier
         eballs_change(username, prize)
+        log_game(username, "roulette", bet, "win", prize, details)
         result_text += f"🎉 ДЖЕКПОТ! Ты угадал точное число! Выиграл {prize} е-баллов! (x{multiplier})"
     else:
+        log_game(username, "roulette", bet, "lose", 0, details)
         result_text += f"💀 Ты просрал {bet} е-баллов"
     
     await message.answer(result_text)
