@@ -3,12 +3,18 @@ import asyncio
 import logging
 import random
 from aiogram import F
-from aiogram import Bot, Dispatcher, types
+from aiogram import Bot, Dispatcher, types, Router
 from aiogram.filters.command import Command
+#keyboard import
 from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton, FSInputFile
+#FSM import
 from aiogram.fsm.context import FSMContext
 from aiogram.fsm.state import StatesGroup, State
 from aiogram.fsm.storage.memory import MemoryStorage
+from States.user_states import FSM
+#handlers
+from Handlers import start
+
 from Config.config_reader import config
 from bd_handler import is_user_valid, new_user, eballs_balance, eballs_change, log_game, get_user_stats
 
@@ -48,27 +54,7 @@ bot = Bot(token=config.bot_token.get_secret_value())
 # Диспетчер
 dp = Dispatcher()
 
-
-class FSM(StatesGroup):
-    RegLogState = State()
-    Login = State()
-    Password = State()
-    Depalka = State()
-
-# Хэндлер на команду /start
-@dp.message(Command("start"))
-async def cmd_start(message: types.Message, state: FSMContext):
-    await message.answer("Привет, брательник! На всякий случай - ты вошёл в додепалку, тг-бот для розыгрыша е-баллов. Есть два стула", reply_markup=get_start_keyboard())
-    await state.set_state(FSM.RegLogState)
-
-def get_start_keyboard():
-    keyboard = InlineKeyboardMarkup(inline_keyboard=[
-        [
-            InlineKeyboardButton(text="Регистрация", callback_data="register"),
-            InlineKeyboardButton(text="Вход", callback_data="login")
-        ]
-    ])
-    return keyboard
+dp.include_router(start.router)
 
 @dp.callback_query(FSM.RegLogState, F.data == "register")
 async def process_register(callback: types.CallbackQuery, state: FSMContext):
