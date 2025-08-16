@@ -60,7 +60,7 @@ source venv/bin/activate
 Install requirements:
 
 ```bash
-pip install -r requirements.txt 
+pip install -r Config/requirements.txt 
 ```
 
 Create your .env file - copy .env.example to .env and fill in your data (tg_bot api and data for your PostgreSql server connection)

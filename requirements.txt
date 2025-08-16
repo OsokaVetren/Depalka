@@ -1,4 +1,0 @@
-aiogram<4.0
-pydantic-settings
-psycopg2-binary
-sqlalchemy
