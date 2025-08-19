@@ -13,7 +13,7 @@ from aiogram.fsm.state import StatesGroup, State
 from aiogram.fsm.storage.memory import MemoryStorage
 from States.user_states import FSM
 #handlers
-from Handlers import start, auth_loop, info
+from Handlers import start, auth_loop, info, help, games, pravda, stats
 
 from Config.config_reader import config
 from database.bd_handler import is_user_valid, new_user, eballs_balance, eballs_change, log_game, get_user_stats
@@ -57,60 +57,10 @@ dp = Dispatcher()
 dp.include_router(start.router)
 dp.include_router(auth_loop.router)
 dp.include_router(info.router)
-
-
-@dp.callback_query(FSM.Depalka, F.data == "logout")
-async def logout(callback: types.CallbackQuery, state: FSMContext):
-    await callback.message.edit_text("Вы вышли из аккаунта. Чтобы войти снова, напишите /start")
-    await state.set_state(FSM.RegLogState)
-
-@dp.callback_query(FSM.Depalka, F.data == "help")
-async def get_help(callback: types.CallbackQuery):
-    await callback.message.edit_text("В депалке есть множество способов поднять е-баллов и стать самым крутым в садике😎\n\n"
-                                  "🪙 Монетка - выбираешь сторону и бросаешь монетку. "
-                                  "Если выбранная сторона окажется верной, ставочка приумножится x2, а если неверной, то гуляй вася жуй опилки\n"
-                                  "💰 Рулетка - там крч колесо крутится и ставить можно по-разному, сами разберётесь крч\n"
-                                  "💣 Сапёр - есть сетка из плиток, в каждой из них либо приз, либо мина. После каждой плитки можно либо вывести приз, либо продолжить гэмблить. "
-                                  "Наступил на мину - поздравляю, ты лох)\n"
-                                  "🃏 Блекджек - тихий и стандартный, цель - набрать больше очков, чем дилер, но не более 21. "
-                                  "Присутствует смелая возможность удвоить ставочку на первом ходу, но и шанс оподливиться станет выше\n\n"
-                                  "P.S.: напиши /stats, чтобы посмотреть статку последних 5 игр, или /pravda, чтобы узнать секрет🤫",
-                                  reply_markup=get_help_keyboard())
-    
-def get_help_keyboard():
-    keyboard = InlineKeyboardMarkup(inline_keyboard=[
-        [
-            InlineKeyboardButton(text="В меню", callback_data="info")
-        ]
-    ])
-    return keyboard
-
-@dp.callback_query(F.data == "info")
-async def back_to_info(callback: types.CallbackQuery, state: FSMContext):
-    data = await state.get_data()
-    await state.set_state(FSM.Depalka)
-    await callback.message.edit_text(f"Никнейм: {data['username']}\n"
-                                  f"Е-баллы: {eballs_balance(data['username'])}",
-                                  reply_markup=get_info_keyboard())
-
-@dp.callback_query(FSM.Depalka, F.data == "games")
-async def choose_game(callback: types.CallbackQuery):
-    await callback.message.edit_text("Выбери игру", reply_markup=get_games_keyboard())
-
-def get_games_keyboard():
-    keyboard = InlineKeyboardMarkup(inline_keyboard=[
-        [
-            InlineKeyboardButton(text="Монетка", callback_data="coinflip"),
-            InlineKeyboardButton(text="Рулетка", callback_data="roulette"),
-        ], [
-            InlineKeyboardButton(text="Сапёр", callback_data="dig"),
-            InlineKeyboardButton(text="Блекджек", callback_data="blackjack"),
-        ], [
-            InlineKeyboardButton(text="В меню", callback_data="info"),
-        ]
-    ])
-    return keyboard
-
+dp.include_router(help.router)
+dp.include_router(games.router)
+dp.include_router(pravda.router)
+dp.include_router(stats.router)
 
 # -------------------- Сапёр --------------------
 @dp.callback_query(FSM.Depalka, F.data == "dig")
@@ -843,17 +793,6 @@ async def show_stats(message: types.Message, state: FSMContext):
         stats_text += f"   Ставка: {game['bet_amount']} | Приз: {game['prize_amount']} {result}\n\n"
     
     await message.answer(stats_text)
-
-
-# Хэндлер на команду /pravda
-@dp.message(Command('pravda'), FSM.Depalka)
-async def upload_photo(message: types.Message):
-    photo = FSInputFile("pravda.jpg")
-    await message.answer_photo(
-            photo,
-            caption="что вас ждёт"
-    )
-
 # Запуск процесса поллинга новых апдейтов
 async def main():
     await dp.start_polling(bot)

@@ -6,6 +6,10 @@ from States.user_states import FSM
 
 from aiogram import F
 
+from Keyboards.to_menu_kb import to_menu_kb
+from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton, FSInputFile
+
+
 from aiogram import Router, types
 from aiogram.filters import Command
 #db_handler
@@ -43,18 +47,23 @@ async def password_getter(message: types.Message, state: FSMContext):
     user_id = message.from_user.id
     if type == "login":
         if is_user_valid(username, password):
-            await message.answer("Вы успешно вошли! Вновь приветствуем Вас в депалке! Напишите /info, чтобы открыть меню")
             await state.set_state(FSM.Depalka)
+            await message.answer("Вы успешно вошли! Добро пожаловать в Депалку!", reply_markup=to_menu_kb)
         else:
             await message.answer("Ебать ты лох, данные не верны)")
             await state.set_state(FSM.RegLogState)
     if type == "register":
         if new_user(user_id, username, password):
-            await message.answer("Вы успешно зарегестрировались! Добро пожаловать в Депалку! Напишите /info, чтобы открыть меню")
             await state.set_state(FSM.Depalka)
+            await message.answer("Вы успешно зарегестрировались! Добро пожаловать в Депалку!", reply_markup=to_menu_kb)
         else:
             await message.answer("Ебать ты лох, никнейм занят)")
             await state.set_state(FSM.RegLogState)
+
+@router.callback_query(FSM.Depalka, F.data == "logout")
+async def logout(callback: types.CallbackQuery, state: FSMContext):
+    await callback.message.edit_text("Вы вышли из аккаунта. Чтобы войти снова, напишите /start")
+    await state.set_state(FSM.RegLogState)
 
 async def get_data(state: FSMContext, key: str):
     data = await state.get_data()
