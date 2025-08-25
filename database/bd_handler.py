@@ -26,8 +26,8 @@ def is_user_valid(username, password):
 
 def new_user(user_id, username, password):
     query = text("""
-                 INSERT INTO users (user_id, username, password)
-                 VALUES (:user_id, :username, crypt(:password, gen_salt('bf')))
+                 INSERT INTO users (user_id, username, password, eballs)
+                 VALUES (:user_id, :username, crypt(:password, gen_salt('bf')), 100)
                  """)
     try:
         with engine.begin() as conn:

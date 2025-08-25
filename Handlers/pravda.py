@@ -18,5 +18,6 @@ async def upload_photo(message: types.Message):
     photo = FSInputFile("pravda.jpg")
     await message.answer_photo(
             photo,
-            caption="что вас ждёт", reply_markup=to_menu_kb
+            caption="что вас ждёт",
     )
+    await message.answer("Ня (костыль небольшой, забейте)", reply_markup=to_menu_kb)
