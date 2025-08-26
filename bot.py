@@ -4,7 +4,7 @@ import logging
 from aiogram import Bot, Dispatcher, types, Router
 
 #handlers
-from Handlers import start, auth_loop, info, help, games, pravda, stats
+from Handlers import start, auth_loop, info, help, games, pravda, stats, scheduler_test
 from Games import saper, monetka, ruletka, blackjack
 
 from Config.config_reader import config
@@ -59,6 +59,8 @@ dp.include_router(blackjack.router)
 
 # Запуск процесса поллинга новых апдейтов
 async def main():
+    scheduler_test.schedule_job()
+    scheduler_test.scheduler_start()
     await dp.start_polling(bot)
 
 if __name__ == "__main__":

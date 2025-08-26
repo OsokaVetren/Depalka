@@ -57,6 +57,16 @@ def eballs_change(username, delta):
         result = conn.execute(query, {"username": username, "delta": delta})
     return result.rowcount > 0
 
+def dodep_update_all():
+    query = text(f"""
+        UPDATE users
+        SET eballs = GREATEST(eballs, 10)
+    """)
+    with engine.begin() as conn:
+        conn.execute(query)
+    print('вовчик лох')
+
+
 def log_game(username, game_type, bet_amount, result, prize_amount=0, details=None):
     query = text("""
                  INSERT INTO game_logs (username, game_type, bet_amount, result, prize_amount, details)
