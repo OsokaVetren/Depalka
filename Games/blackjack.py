@@ -27,7 +27,7 @@ async def start_blackjack_game(callback: types.CallbackQuery, state: FSMContext)
 class BlackjackFSM(StatesGroup):
     Bet = State()
     Playing = State()
-
+from database.bd_handler import get_user_stats
 @router.message(BlackjackFSM.Bet)
 async def set_blackjack_bet(message: types.Message, state: FSMContext):
     data = await state.get_data()
@@ -74,7 +74,7 @@ async def set_blackjack_bet(message: types.Message, state: FSMContext):
             f"🃏 BLACKJACK!\n\n"
             f"Твои карты: {format_hand(player_hand)} = {player_score}\n"
             f"Карты дилера: {format_hand(dealer_hand)} = {dealer_score}\n\n"
-            f"Ничья! Ставка возвращена: {bet} е-баллов", reply_markup=to_menu_kb
+            f"Ничья! Ставка возвращена: {bet} хатсуне мику", reply_markup=to_menu_kb
         )
         await state.set_state(FSM.Depalka)
     elif player_score == 21:
@@ -180,7 +180,7 @@ async def blackjack_hit(callback: types.CallbackQuery, state: FSMContext):
         await callback.message.edit_text(
             f"Твои карты: {format_hand(player_hand)} = {player_score}\n"
             f"Карты дилера: {format_hand(dealer_hand, hide_first=True)}\n\n"
-            f"💀 Перебор! Ты просрал {bet} е-баллов", reply_markup=to_menu_kb
+            f"💀 Перебор! Ты просрал {bet} хатсуне мику", reply_markup=to_menu_kb
         )
         await state.set_state(FSM.Depalka)
     elif player_score == 21:
@@ -274,19 +274,19 @@ async def dealer_turn(message, state, doubled=False):
         prize = bet * 2
         eballs_change(username, prize)
         log_game(username, "blackjack", bet, "win", prize, details)
-        result_text += f"🎉 Дилер перебрал! Ты выиграл {prize} е-баллов!"
+        result_text += f"🎉 Дилер перебрал! Ты выиграл {prize} хатсуне мику!"
     elif player_score > dealer_score:
         prize = bet * 2
         eballs_change(username, prize)
         log_game(username, "blackjack", bet, "win", prize, details)
-        result_text += f"🎉 Ты выиграл {prize} е-баллов!"
+        result_text += f"🎉 Ты выиграл {prize} хатсуне мику!"
     elif player_score == dealer_score:
         eballs_change(username, bet)
         log_game(username, "blackjack", bet, "draw", bet, details)
-        result_text += f"🤝 Ничья! Ставка возвращена: {bet} е-баллов"
+        result_text += f"🤝 Ничья! Ставка возвращена: {bet} хатсуне мику!"
     else:
         log_game(username, "blackjack", bet, "lose", 0, details)
-        result_text += f"💀 Дилер выиграл! Ты просрал {bet} е-баллов"
+        result_text += f"💀 Дилер выиграл! Ты просрал {bet} хатсуне мику!"
     
     await message.edit_text(result_text, reply_markup=to_menu_kb)
     await state.set_state(FSM.Depalka)
