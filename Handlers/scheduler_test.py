@@ -21,6 +21,6 @@ scheduler = AsyncIOScheduler()
 
 
 def schedule_job():
-    scheduler.add_job(dodep_update_all, "interval", minutes=1)
+    scheduler.add_job(dodep_update_all, "interval", days=1)
 def scheduler_start():
     scheduler.start()
