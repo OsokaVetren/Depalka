@@ -4,7 +4,7 @@ import logging
 from aiogram import Bot, Dispatcher, types, Router
 
 #handlers
-from Handlers import start, auth_loop, info, help, games, pravda, stats, scheduler_test
+from Handlers import start, auth_loop, info, help, games, pravda, stats, scheduler_test, top
 from Games import saper, monetka, ruletka, blackjack
 
 from Config.config_reader import config
@@ -52,6 +52,7 @@ dp.include_router(help.router)
 dp.include_router(games.router)
 dp.include_router(pravda.router)
 dp.include_router(stats.router)
+dp.include_router(top.router)
 dp.include_router(saper.router)
 dp.include_router(ruletka.router)
 dp.include_router(monetka.router)

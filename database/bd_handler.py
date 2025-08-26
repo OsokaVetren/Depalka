@@ -102,3 +102,15 @@ def get_user_stats(username, limit=10):
     with engine.connect() as conn:
         result = conn.execute(query, {"username": username, "limit": limit}).fetchall()
     return [dict(row._mapping) for row in result]
+
+def get_top_players(limit=10):
+    query = text("""
+                 SELECT username, eballs
+                 FROM users
+                 ORDER BY eballs DESC
+                 LIMIT :limit
+                 """)
+    
+    with engine.connect() as conn:
+        result = conn.execute(query, {"limit": limit}).fetchall()
+    return [dict(row._mapping) for row in result]

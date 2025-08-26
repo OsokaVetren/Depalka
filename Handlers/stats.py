@@ -47,4 +47,4 @@ async def show_stats(message: types.Message, state: FSMContext):
         stats_text += f"{i}. {game_name}\n"
         stats_text += f"   Ставка: {game['bet_amount']} | Приз: {game['prize_amount']} {result}\n\n"
     
-    await message.answer(stats_text)
+    await message.answer(stats_text, reply_markup=to_menu_kb)
