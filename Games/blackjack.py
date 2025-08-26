@@ -27,7 +27,7 @@ async def start_blackjack_game(callback: types.CallbackQuery, state: FSMContext)
 class BlackjackFSM(StatesGroup):
     Bet = State()
     Playing = State()
-from database.bd_handler import get_user_stats
+
 @router.message(BlackjackFSM.Bet)
 async def set_blackjack_bet(message: types.Message, state: FSMContext):
     data = await state.get_data()
@@ -283,10 +283,10 @@ async def dealer_turn(message, state, doubled=False):
     elif player_score == dealer_score:
         eballs_change(username, bet)
         log_game(username, "blackjack", bet, "draw", bet, details)
-        result_text += f"🤝 Ничья! Ставка возвращена: {bet} хатсуне мику!"
+        result_text += f"🤝 Ничья! Ставка возвращена: {bet} хатсуне мику"
     else:
         log_game(username, "blackjack", bet, "lose", 0, details)
-        result_text += f"💀 Дилер выиграл! Ты просрал {bet} хатсуне мику!"
+        result_text += f"💀 Дилер выиграл! Ты просрал {bet} хатсуне мику"
     
     await message.edit_text(result_text, reply_markup=to_menu_kb)
     await state.set_state(FSM.Depalka)
