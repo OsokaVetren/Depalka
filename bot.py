@@ -59,7 +59,8 @@ dp.include_router(blackjack.router)
 
 # Запуск процесса поллинга новых апдейтов
 async def main():
-    scheduler_test.scheduler.start()
+    scheduler_test.schedule_job()
+    scheduler_test.scheduler_start()
     await dp.start_polling(bot)
 
 if __name__ == "__main__":

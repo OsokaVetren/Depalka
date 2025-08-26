@@ -14,21 +14,13 @@ from aiogram.fsm.state import StatesGroup, State
 from aiogram.fsm.storage.memory import MemoryStorage
 from States.user_states import FSM
 
-from database.bd_handler import eballs_balance, eballs_change
+from database.bd_handler import eballs_balance, eballs_change, dodep_update_all
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 
-router = Router()
 scheduler = AsyncIOScheduler()
 
 
-async def death_in_poverty(state: FSMContext):
-    data = await state.get_data()
-    username = data["username"]
-    if eballs_balance(data["username"]) < 10:
-        eballs_change(username, +10)
-        print('вова лох')
-
-
 def schedule_job():
-    scheduler.add_job(death_in_poverty, "interval", minutes=1)
-
+    scheduler.add_job(dodep_update_all, "interval", minutes=1)
+def scheduler_start():
+    scheduler.start()
