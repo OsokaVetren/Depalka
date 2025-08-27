@@ -105,9 +105,14 @@ def get_user_stats(username, limit=10):
 
 def get_top_players(limit=10):
     query = text("""
-                 SELECT username, eballs
-                 FROM users
-                 ORDER BY eballs DESC
+                 SELECT u1.username, u1.eballs
+                 FROM users u1
+                 WHERE u1.id = (
+                    SELECT MIN(u2.id) 
+                    FROM users u2
+                    WHERE u2.user_id = u1.user_id
+                 )
+                 ORDER BY u1.eballs DESC
                  LIMIT :limit
                  """)
     
