@@ -85,7 +85,7 @@ async def set_blackjack_bet(message: types.Message, state: FSMContext):
             f"🃏 BLACKJACK!\n\n"
             f"Твои карты: {format_hand(player_hand)} = {player_score}\n"
             f"Карты дилера: {format_hand(dealer_hand, hide_first=True)}\n\n"
-            f"🎉 Блекджек! Ты выиграл {prize} е-баллов!", reply_markup=to_menu_kb
+            f"🎉 Блекджек! Ты выиграл {prize} хатсуне мику!", reply_markup=to_menu_kb
         )
         await state.set_state(FSM.Depalka)
     else:
@@ -236,7 +236,7 @@ async def blackjack_double(callback: types.CallbackQuery, state: FSMContext):
         await callback.message.edit_text(
             f"Твои карты: {format_hand(player_hand)} = {player_score}\n"
             f"Карты дилера: {format_hand(dealer_hand, hide_first=True)}\n\n"
-            f"💀 Перебор! Ты просрал {bet * 2} е-баллов", reply_markup=to_menu_kb
+            f"💀 Перебор! Ты просрал {bet * 2} хатсуне мику", reply_markup=to_menu_kb
         )
         await state.set_state(FSM.Depalka)
     else:
