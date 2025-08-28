@@ -4,7 +4,7 @@ import logging
 from aiogram import Bot, Dispatcher, types, Router
 
 #handlers
-from Handlers import start, auth_loop, info, help, games, pravda, stats, scheduler_test, profile, achievements
+from Handlers import start, auth_loop, info, help, games, pravda, stats, scheduler_test, profile, achievements, top
 from Games import saper, monetka, ruletka, blackjack
 
 from Config.config_reader import config
