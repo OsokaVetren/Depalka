@@ -190,10 +190,10 @@ async def spin_roulette(callback: types.CallbackQuery, state: FSMContext):
         prize = bet * multiplier
         eballs_change(username, prize)
         log_game(username, "roulette", bet, "win", prize, details)
-        result_text += f"🎉 Ты выиграл {prize} е-баллов! (x{multiplier})"
+        result_text += f"🎉 Ты выиграл {prize} хатсуне мику! (x{multiplier})"
     else:
         log_game(username, "roulette", bet, "lose", 0, details)
-        result_text += f"💀 Ты просрал {bet} е-баллов"
+        result_text += f"💀 Ты просрал {bet} хатсуне мику"
     
     await callback.message.edit_text(result_text, reply_markup=to_menu_kb)
     await state.set_state(FSM.Depalka)
@@ -238,10 +238,10 @@ async def spin_roulette_message(message: types.Message, state: FSMContext):
         prize = bet * multiplier
         eballs_change(username, prize)
         log_game(username, "roulette", bet, "win", prize, details)
-        result_text += f"🎉 ДЖЕКПОТ! Ты угадал точное число! Выиграл {prize} е-баллов! (x{multiplier})"
+        result_text += f"🎉 ДЖЕКПОТ! Ты угадал точное число! Выиграл {prize} хатсуне мику! (x{multiplier})"
     else:
         log_game(username, "roulette", bet, "lose", 0, details)
-        result_text += f"💀 Ты просрал {bet} е-баллов"
+        result_text += f"💀 Ты просрал {bet} хатсуне мику"
     
     await message.answer(result_text, reply_markup=to_menu_kb)
     await state.set_state(FSM.Depalka)

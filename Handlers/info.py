@@ -20,7 +20,7 @@ router = Router()
 async def show_info(callback: types.CallbackQuery, state: FSMContext):
     data = await state.get_data()
     await callback.message.edit_text(f"Никнейм: {data['username']}\n"
-                         f"Е-баллы: {eballs_balance(data['username'])}",
+                         f"Хатсуне мику: {eballs_balance(data['username'])}",
                          reply_markup=info_kb)
 
 async def get_data(state: FSMContext, key: str):

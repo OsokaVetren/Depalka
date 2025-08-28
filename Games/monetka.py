@@ -74,7 +74,7 @@ async def coin_result(callback: types.CallbackQuery, state: FSMContext):
         log_game(username, "coinflip", bet, "win", prize, details)
         await callback.message.edit_text(
             f"🪙 {'Выпал Орел' if flip_result == 'heads' else 'Выпала Решка'}!\n"
-            f"Ты выиграл {prize} е-баллов 🎉", reply_markup=to_menu_kb
+            f"Ты выиграл {prize} хатсуне мику 🎉", reply_markup=to_menu_kb
         )
     elif flip_result == "edge":
         bonus = bet//2
@@ -82,13 +82,13 @@ async def coin_result(callback: types.CallbackQuery, state: FSMContext):
         log_game(username, "coinflip", bet, "draw", bonus, details)
         await callback.message.edit_text(
             f"🪙 Монетка встала на ребро! 🤯\n"
-            f"Ставочка не сыграла, но кэшбек {bonus} е-баллов!", reply_markup=to_menu_kb
+            f"Ставочка не сыграла, но кэшбек {bonus} хатсуне мику", reply_markup=to_menu_kb
         )
     else:
         log_game(username, "coinflip", bet, "lose", 0, details)
         await callback.message.edit_text(
             f"🪙 {'Выпал Орел' if flip_result == 'heads' else 'Выпала Решка'}!\n"
-            f"Ты просрал {bet} е-баллов 💀", reply_markup=to_menu_kb
+            f"Ты просрал {bet} хатсуне мику 💀", reply_markup=to_menu_kb
         )
 
     await state.set_state(FSM.Depalka)

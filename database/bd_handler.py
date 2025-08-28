@@ -124,3 +124,20 @@ def stats_advanced(username):
     with engine.connect() as conn:
         result = conn.execute(query, {"username": username}).mappings().first()
         return result["spins_count"], result["total_deposit"]
+      
+def get_top_players(limit=10):
+    query = text("""
+                 SELECT u1.username, u1.eballs
+                 FROM users u1
+                 WHERE u1.id = (
+                    SELECT MIN(u2.id) 
+                    FROM users u2
+                    WHERE u2.user_id = u1.user_id
+                 )
+                 ORDER BY u1.eballs DESC
+                 LIMIT :limit
+                 """)
+    
+    with engine.connect() as conn:
+        result = conn.execute(query, {"limit": limit}).fetchall()
+    return [dict(row._mapping) for row in result]

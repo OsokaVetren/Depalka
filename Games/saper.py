@@ -51,7 +51,7 @@ async def set_dig_bet(message: types.Message, state: FSMContext):
     )
     await state.set_state(DigFSM.Playing)
     await message.answer(
-        f"Ставка принята: {bet} е-баллов\n"
+        f"Ставка принята: {bet} хатсуне мику\n"
         "Выбирай клетку:",
         reply_markup=get_field_keyboard([])
     )
@@ -101,7 +101,7 @@ async def dig_cell(callback: types.CallbackQuery, state: FSMContext):
         }
         log_game(username, "dig", bet, "lose", 0, details)
         await callback.message.edit_text(
-            f"💥 Бум! Ты просрал {bet} е-баллов!", reply_markup=to_menu_kb
+            f"💥 Бум! Ты просрал {bet} хатсуне мику!", reply_markup=to_menu_kb
         )
         await state.set_state(FSM.Depalka)
     else:
@@ -109,7 +109,7 @@ async def dig_cell(callback: types.CallbackQuery, state: FSMContext):
         profit += int(round(bet * 0.2))
         await state.update_data(opened=opened, profit=profit)
         await callback.message.edit_text(
-            f"Текущий выигрыш: {profit} е-баллов",
+            f"Текущий выигрыш: {profit} хатсуне мику",
             reply_markup=get_field_keyboard(opened)
         )
 
@@ -128,6 +128,6 @@ async def cashout(callback: types.CallbackQuery, state: FSMContext):
     }
     log_game(username, "dig", bet, "win", profit, details)
     await callback.message.edit_text(
-        f"Ты забрал {profit} е-баллов со ставки {bet}", reply_markup=to_menu_kb
+        f"Ты забрал {profit} хатсуне мику со ставки {bet}", reply_markup=to_menu_kb
     )
     await state.set_state(FSM.Depalka)
