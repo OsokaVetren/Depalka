@@ -42,6 +42,7 @@ async def password_getter(message: types.Message, state: FSMContext):
     await state.update_data(password = message.text)
     username = await get_data(state, "username")
     password = await get_data(state, "password")
+    print(password)
     type = await get_data(state, "type")
     await message.answer("Ваш логин и пароль: " + username + " " + password)
     user_id = message.from_user.id

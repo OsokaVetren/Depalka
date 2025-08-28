@@ -36,14 +36,14 @@ def new_user(user_id, username, password):
     except IntegrityError:
         return False
 
-def update_user(user_id, username, password):
+def update_user(old_username, username, password):
     query = text("""
                 UPDATE users
                 SET username = :username, password = :password
-                WHERE user_id = :user_id
-                 """)
+                WHERE username = :old_username
+                  """)
     with engine.begin() as conn:
-        conn.execute(query, {"user_id": user_id, "username": username, "password": password})
+        conn.execute(query, {"old_username": old_username, "username": username, "password": password})
         return True
 
 def eballs_balance(username):

@@ -65,17 +65,20 @@ async def user_data_change(message: types.Message, state: FSMContext):
     change_type = await get_data(state, "profile_change")
     username = await get_data(state, "username")
     password = await get_data(state, "password")
+    print(password)
     user_id = message.from_user.id
     if change_type == "login":
-        if not update_user(user_id, value, password):
+        if not update_user(username, value, password):
             await message.answer(f"Что-то пошло не так. Приносим свои изменения. Е-баллы не вернём", reply_markup = to_menu_kb)
             await state.set_state(FSM.Depalka)
             return
+        await state.update_data(username = value)
     else:
-        if not update_user(user_id, username, value):
+        if not update_user(username, username, value):
             await message.answer(f"Что-то пошло не так. Приносим свои изменения. Е-баллы не вернём", reply_markup = to_menu_kb)
             await state.set_state(FSM.Depalka)
             return
+        await state.update_data(password = value)
     if change_type == "login":
         await message.answer(f"Ваше что-то там было изменено! \n"
                                 "Новое погоняло - " + value + "\n"
