@@ -65,7 +65,6 @@ async def user_data_change(message: types.Message, state: FSMContext):
     change_type = await get_data(state, "profile_change")
     username = await get_data(state, "username")
     password = await get_data(state, "password")
-    print(password)
     user_id = message.from_user.id
     if change_type == "login":
         if not update_user(username, value, password):

@@ -39,7 +39,7 @@ def new_user(user_id, username, password):
 def update_user(old_username, username, password):
     query = text("""
                 UPDATE users
-                SET username = :username, password = :password
+                SET username = :username, password = crypt(:password, gen_salt('bf'))
                 WHERE username = :old_username
                   """)
     with engine.begin() as conn:
