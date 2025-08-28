@@ -7,3 +7,4 @@ class FSM(StatesGroup):
     Login = State()
     Password = State()
     Depalka = State()
+    User_Data_Change = State()

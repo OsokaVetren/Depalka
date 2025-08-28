@@ -5,6 +5,7 @@ info_kb = InlineKeyboardMarkup(inline_keyboard=[
             InlineKeyboardButton(text="Игры", callback_data="games"),
             InlineKeyboardButton(text="Помощь", callback_data="help"),
         ], [
+            InlineKeyboardButton(text="Профиль", callback_data="profile"),
             InlineKeyboardButton(text="Выход из аккаунта", callback_data="logout"),
         ]
     ])

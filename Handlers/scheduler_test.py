@@ -3,7 +3,6 @@ from aiogram.filters import Command
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 
 # kb_import
-from Keyboards.info_kb import info_kb
 from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton, FSInputFile
 
 from aiogram import F

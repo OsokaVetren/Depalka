@@ -36,6 +36,16 @@ def new_user(user_id, username, password):
     except IntegrityError:
         return False
 
+def update_user(user_id, username, password):
+    query = text("""
+                UPDATE users
+                SET username = :username, password = :password
+                WHERE user_id = :user_id
+                 """)
+    with engine.begin() as conn:
+        conn.execute(query, {"user_id": user_id, "username": username, "password": password})
+        return True
+
 def eballs_balance(username):
     query = text("""
                  SELECT eballs
@@ -103,6 +113,18 @@ def get_user_stats(username, limit=10):
         result = conn.execute(query, {"username": username, "limit": limit}).fetchall()
     return [dict(row._mapping) for row in result]
 
+def stats_advanced(username):
+    query = text("""
+                 SELECT 
+                    COUNT(*) AS spins_count,
+                    COALESCE(SUM(bet_amount), 0) AS total_deposit
+                FROM game_logs
+                WHERE username = :username;
+                """)
+    with engine.connect() as conn:
+        result = conn.execute(query, {"username": username}).mappings().first()
+        return result["spins_count"], result["total_deposit"]
+      
 def get_top_players(limit=10):
     query = text("""
                  SELECT u1.username, u1.eballs
