@@ -4,7 +4,7 @@ import logging
 from aiogram import Bot, Dispatcher, types, Router
 
 #handlers
-from Handlers import start, auth_loop, info, help, games, pravda, stats, scheduler_test
+from Handlers import start, auth_loop, info, help, games, pravda, stats, scheduler_test, profile, achievements
 from Games import saper, monetka, ruletka, blackjack
 
 from Config.config_reader import config
@@ -56,6 +56,8 @@ dp.include_router(saper.router)
 dp.include_router(ruletka.router)
 dp.include_router(monetka.router)
 dp.include_router(blackjack.router)
+dp.include_router(profile.router)
+dp.include_router(achievements.router)
 
 # Запуск процесса поллинга новых апдейтов
 async def main():
